@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irrigação Tião da Bocha</title>
+
+    <style>
+        :root {
+            --primary: #087f23;
+            --background: #fbfbfb;
+        }
+
+        * {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--background);
+            font-size: 16px;
+        }
+
+        main {
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            max-width: 441px;
+            margin: 0 auto;
+        }
+
+        .title {
+            color: var(--primary);
+            font-size: 2rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            margin: .5rem 0;
+        }
+
+        .scheduling {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scheduling li {
+            display: flex;
+            flex-direction: column;
+            margin: .5rem 0;
+            padding: 1rem;
+            border-radius: 1rem;
+            background-color: var(--primary);
+            color: white;
+            list-style: none;
+            font-size: 1rem;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.20), 0 5px 6px rgba(0, 0, 0, 0.10);
+        }
+
+        .scheduling li .time {
+            font-size: 1.5rem;
+        }
+
+        .action {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .hide-text {
+            position: fixed;
+            top: -1000px;
+            left: -1000px;
+        }
+
+        .status {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            list-style: none;
+            font-size: 1rem;
+        }
+
+        .status li {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: .5rem;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.20), 0 5px 6px rgba(0, 0, 0, 0.10);
+        }
+
+        .status li .value {
+            font-size: 2rem;
+            margin-bottom: .5rem;
+            color: var(--primary);
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            font-size: 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            z-index: 1000;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            font-size: 1.5rem;
+            background-color: var(--background);
+            color: var(--primary);
+            display: flex;
+            flex-direction: column;
+            visibility: hidden;
+            z-index: 1;
+            padding: 1rem;
+        }
+
+        .modal .title {
+            text-align: center;
+        }
+
+        .loading.open,
+        .modal.open {
+            visibility: visible;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .input-container {
+            background: var(--primary);
+            border-radius: 10px;
+            padding: .5rem 1rem;
+            border: 2px solid var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        input {
+            background: transparent;
+            border: 0;
+            outline: 0;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        input::placeholder {
+            color: white;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            text-transform: uppercase;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.20), 0 5px 6px rgba(0, 0, 0, 0.10);
+            border-radius: 10px;
+            padding: .5rem 1rem;
+            margin: .5rem;
+        }
+
+        button:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading" class="loading">
+        <p>Carregando...</p>
+    </div>
+
+    <div class="modal" id="modalNewSchedule">
+        <h2 class="title">Agendamento <br>de irrigação</h2>
+        <form>
+            <div class="input-container">
+                <input id="inputTime" type="time" placeholder="Horario">
+            </div>
+
+            <div class="action">
+                <button id="btnCancel" type="button">
+                    Cancelar
+                </button>
+
+                <button id="btnSave" type="button">
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <main>
+        <h1 class="title">
+            Irrigação <br>
+            Tião da Bocha
+        </h1>
+
+        <div class="action">
+            <button type="button" id="btnIrrigationOnOf">
+                Ligar
+            </button>
+        </div>
+
+        <section>
+            <h2 class="subtitle">Agendamentos</h2>
+
+            <ul id="scheduling" class="scheduling">
+                <li>
+                    <span class="time">
+                        07:00
+                    </span>
+
+                    <span>
+                        Remover irrigação agendada
+                    </span>
+
+                    <div class="action">
+                        <button class="remove" type="button">
+                            <span class="hide-text">
+                                Remover
+                            </span>
+                        </button>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="action">
+                <button type="button" id="btnAddNewSchedule">
+                    Novo
+                </button>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="subtitle">Status</h2>
+
+            <ul id="status" class="status"></ul>
+        </section>
+    </main>
+
+    <!-- API -->
+    <script>
+        const IrrigationApi = {};
+        const baseApiPath = `http://192.168.15.3`;
+
+        IrrigationApi.fetchStatus = async function () {
+            try {
+                const url = `${baseApiPath}/status`;
+                const response = await fetch(url);
+                return await response.json();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        IrrigationApi.setIrrigationOnOff = async function (on = true) {
+            try {
+                const url = `${baseApiPath}/irrigation`;
+                const body = new FormData();
+                body.set('irrigation', on ? 1 : 0);
+
+                const response = await fetch(url, { body, method: "post" });
+                return await response.json();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        window.IrrigationApi = IrrigationApi;
+    </script>
+
+    <!-- UI -->
+    <script>
+        const loading = document.getElementById('loading');
+        const modalNewSchedule = document.getElementById('modalNewSchedule');
+        const btnIrrigationOnOf = document.getElementById('btnIrrigationOnOf');
+        const btnAddNewSchedule = document.getElementById('btnAddNewSchedule');
+        const btnCancel = document.getElementById('btnCancel');
+        const btnSave = document.getElementById('btnSave');
+        const scheduling = document.getElementById('scheduling');
+        const status = document.getElementById('status');
+
+        let data = {
+            irrigation: 0,
+            temp: 0,
+            humidity: 0
+        };
+
+        function startLoading() {
+            loading.classList.add('open');
+        }
+
+        function stopLoading() {
+            loading.classList.remove('open');
+        }
+
+        function openModalNewSchedule() {
+            modalNewSchedule.classList.add('open');
+        }
+
+        function closeModalNewSchedule() {
+            modalNewSchedule.classList.remove('open');
+        }
+
+        function scheduleToListItem(time) {
+            const scheduleListItem = `
+                <li>
+                    <span class="time">
+                        ${time}
+                    </span>
+
+                    <span>
+                        Remover irrigação agendada
+                    </span>
+                </li>
+            `;
+            return scheduleListItem;
+        }
+
+        function newStatusListItem(label, value) {
+            return `
+                <li>
+                    <span class="value">${value}</span>
+                    <span>${label}</span>
+                </li>
+            `;
+        }
+
+        function updateBtnIrrigationOnOf() {
+            btnIrrigationOnOf.innerText = data.irrigation === 0 ? 'Ligar' : 'Desligar';
+        }
+
+        function updateStatusList() {
+            status.innerHTML = [
+                newStatusListItem('Temp', `${parseInt(data.temp) || 0}°C`), 
+                newStatusListItem('Umidade', `${parseInt(data.humidity) || 0}%`)
+            ].join('');
+        }
+
+        function updateComponents() {
+            updateBtnIrrigationOnOf();
+            updateStatusList();
+        }
+
+        async function turnIrrigationOnOf() {
+            try {
+                data = await window.IrrigationApi.setIrrigationOnOff(data.irrigation === 1 ? 0 : 1);
+            } finally {
+                updateComponents();
+            }
+        }
+
+        async function loadingInformations() {
+            try {
+                data = await window.IrrigationApi.fetchStatus();
+            } finally {
+                updateComponents();
+            }
+
+            // const schedules = ['07:00', '17:00'];
+            // const temp = 24;
+            // const humidity = 44;
+
+            // scheduling.innerHTML = schedules.map(scheduleToListItem).join('');
+        }
+
+        function saveNewSchecdule() {
+            const newTime = inputTime.value;
+
+            startLoading();
+            console.log('Saving', newTime);
+
+            setTimeout(() => {
+                stopLoading();
+                closeModalNewSchedule();
+            }, 2000);
+        }
+
+        btnIrrigationOnOf.addEventListener('click', turnIrrigationOnOf);
+        btnAddNewSchedule.addEventListener('click', openModalNewSchedule);
+        btnCancel.addEventListener('click', closeModalNewSchedule);
+        btnSave.addEventListener('click', saveNewSchecdule);
+
+        loadingInformations();
+
+        setInterval(() => {
+            loadingInformations();
+        }, 10000);
+    </script>
+</body>
+
+</html>
